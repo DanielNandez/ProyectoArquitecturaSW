@@ -1,58 +1,78 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Proyecto Laravel con Docker
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Este repositorio contiene una aplicación Laravel configurada para ejecutarse en Docker usando el servidor incorporado de Laravel (`php artisan serve`) en lugar de un servidor web externo.
 
-## About Laravel
+## Qué se hizo
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+1. Se creó un `Dockerfile` para el servicio Laravel:
+   - Base: `php:8.4-cli`
+   - Instalación de dependencias del sistema (`git`, `unzip`, `libzip-dev`, `libpng-dev`, `libonig-dev`)
+   - Instalación de extensiones PHP: `pdo`, `pdo_mysql`, `zip`
+   - Instalación de Composer
+   - Copia del código del proyecto
+   - Creación de `.env` desde `.env.example` si no existe
+   - Ejecución de `composer install`
+   - Exposición del puerto `8000`
+   - Comando de arranque: `php artisan serve --host=0.0.0.0 --port=8000`
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+2. Se actualizó `docker-compose.yml` para incluir tres servicios:
+   - `app`: contenedor Laravel construido desde el `Dockerfile`
+   - `mysql`: servidor MySQL estándar
+   - `phpmyadmin`: interfaz web para administrar MySQL
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+3. Se ajustó la configuración de base de datos en `.env`:
+   - `DB_HOST=mysql`
+   - `DB_DATABASE=apiPrueba`
+   - `DB_USERNAME=root`
+   - `DB_PASSWORD=1234`
 
-## Learning Laravel
+4. Se creó la base de datos `apiPrueba` en MySQL y se aplicaron las migraciones.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Servicios disponibles
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Aplicación Laravel: `http://localhost:8000`
+- phpMyAdmin: `http://localhost:8080`
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Comandos principales
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Construir y arrancar el stack:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+docker compose up --build -d
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Verificar el estado de los servicios:
 
-## Contributing
+```bash
+docker compose ps
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Ver logs de la aplicación:
 
-## Code of Conduct
+```bash
+docker compose logs --tail 20 app
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Ver el estado de las migraciones:
 
-## Security Vulnerabilities
+```bash
+docker compose exec app php artisan migrate:status
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Ejecutar migraciones:
 
-## License
+```bash
+docker compose exec app php artisan migrate --force
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Resultado final
+
+- El contenedor Laravel se construyó y arrancó correctamente.
+- La aplicación Laravel está sirviendo en `http://localhost:8000`.
+- La migración `2026_07_23_010731_create_usuario_table` se aplicó correctamente.
+- MySQL y phpMyAdmin están disponibles y configurados para la aplicación.
+
+## Notas
+
+- El contenedor MySQL crea la base de datos `apiPrueba` automáticamente.
+- El contenedor Laravel usa el servidor embebido de Laravel en lugar de `nginx` o `apache`.
