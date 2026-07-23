@@ -1,1 +1,40 @@
-F
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: app_laravel
+        ports:
+            - 8000:8000
+        volumes:
+            - ./:/var/www/html
+        depends_on:
+            - mysql
+        networks:
+            - db
+    mysql:
+        image: mysql:latest
+        container_name: container_mysql
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: 1234
+            MYSQL_DATABASE: apiPrueba
+        volumes:
+            - mysql_data:/var/lib/mysql
+        networks:
+            - db
+    phpmyadmin:
+        image: phpmyadmin:latest
+        container_name: container_phpmyadmin
+        ports:
+            - 8080:80
+        environment:
+            PMA_HOST: mysql
+            PMA_PORT: 3306
+        networks:
+            - db
+volumes:
+    mysql_data:
+networks:
+    db:
